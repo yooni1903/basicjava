@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<link rel = "stylesheet" href = "../css/public.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+<style>
+ .ziptr:hover{
+ 	background: green;
+ }
+</style>
+
+<script>
+    $(function(){
+//        $('input:button')
+        $('input[type=button]').on('click', function(){
+            // 입력한 값 가져오기
+            dongvalue = $('#dong').val().trim();
+            
+            // 서버로 전송(요청)
+            // servlet으로 가야한다. /context Root/servlet
+            $.ajax({
+                url : '/member/DongSearch.do',
+                data : {"dong" : dongvalue},
+                type : 'post',
+                success : function(res){
+                	
+                	code = "<table border='1' class='table table-bordered'>";
+                	code += "<tr><td>우편번호</td>";
+                	code += "<td>주소</td>";
+                	code += "<td>번지</td></tr>";
+                	
+                	$.each(res, function(i, v){
+                		code += "<tr class='ziptr'><td>" + v.code + "</td>";
+	                	code += "<td>" + v.addr + "</td>";
+	                	code += "<td>" + v.bunji + "</td></tr>";
+                	})
+                	
+                	code += "</table>";
+                	
+                	$('#result1').html(code);
+                    
+                },
+                error : function(xhr){
+                    alert("상태 : " + xhr.status);    
+                },
+                dataType : 'json'
+            })
+            // 200(응답은 성공했으나, 응답 형식이 잘못된 경우(json parsing이 잘못된 경우)), 404, 403
+        })
+        
+        
+           // 결과window에서 원하는 행을 선택한다.
+        $('#result1').on('click', '.ziptr', function(){
+        	
+        	// 선택
+        	zipcode = $('td:eq(0)', this).text();
+        	addr = $('td:eq(1)', this).text();
+        	
+        	// 폼에 출력
+        	$('#zip', opener.document).val(zipcode);
+        	$('#add1', opener.document).val(addr);
+        	
+        	// window창 닫기
+        	window.close();
+        	
+        })
+    });
+</script>
+</head>
+<body>
+
+	<div class="box">
+	
+		<br><br>
+		<input type="text" id="dong">
+		<input type="button" value = "확인">
+		<div id="result1"></div>
+	</div>
+</body>
+</html>

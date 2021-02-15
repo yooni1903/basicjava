@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="kr">
+<head>
+<title>Bootstrap Example</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+<script src="../js/jquery.serializejson.min.js"></script>
+<script src="../js/memberfunc.js"></script>
+
+<style>
+.ziptr:hover{
+    background: lightblue;
+}
+</style>
+<script>
+    $(function(){
+        
+        
+        
+    	// key up은 키보드 입력 하나가 끝나는 것을 말함
+        // 정규식 - id 체크
+    	$('#id').on('keyup', function(){
+            idvalue = $('#id').val().trim();
+            
+            // 형식
+            regid = /^[a-z][a-zA-Z0-9]{3,11}$/;      // 정규식 사이에는 공백이 있으면 안된다.
+            
+            // 비교
+            if(regid.test(idvalue)){               // test -> idvalue가 regid 형식에 맞는지 확인해주는 메서드
+                okpro(this);        // 여기서 this는 #id
+            }else{
+                nopro(this, "올바른 형식이 아닙니다.");
+            }
+        })
+        
+        // 이름 
+        $('#name').on('keyup', function(){
+            namevalue = $('#name').val().trim();
+            
+            
+            regname = /^[가-힣]{2,5}$/;
+            
+            if(regname.test(namevalue)){
+                okpro(this);
+            }else{
+                nopro(this, "올바른 형식이 아닙니다.");
+            }
+            if(namevalue.length < 2 || namevalue.length > 5){
+                nopro(this, "이름은 2글자 이상 5글자 이내로 작성해주십시오.");
+                return false;
+            }
+        })
+        
+        $('#hp').on('keyup', function(){
+            hpvalue = $(this).val().trim();
+            
+            reghp = /^\d{3}-\d{4}-\d{4}$/;
+            
+            if(reghp.test(hpvalue)){
+                okpro(this);
+            }else{
+                nopro(this, "올바른 형식이 아닙니다.");
+            }
+        })
+        
+        $('#email').on('keyup', function(){
+            emailvalue = $(this).val().trim();
+            
+            regemail = /^[a-zA-Z0-9]+@[a-zA-Z0-9]+(\.[a-zA-Z]+){1,2}$/        //+는 한글자 이상 \.을 해줘야 .을 문자로 인식한다.
+            
+            if(regemail.test(emailvalue)){
+                okpro(this);
+            }else{
+                nopro(this, "올바른 형식이 아닙니다.");
+            }
+        })
+        
+        $('#pwd').on('keyup', function(){
+            passvalue = $(this).val().trim();
+
+            // 길이
+            if(passvalue.length < 8 || passvalue.length > 12){
+               nopro(this, "비밀번호는 8에서 12자 이내로 입력해주십시오.");
+               return false;
+            }
+
+            // 정규식 -  영문대소문자, 숫자, 특수문자를 반드시 한 개 이상씩 입력
+            passreg = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[~!@#$%^&*()]).{8,15}$/;
+            if((passreg.test(passvalue))){
+                okpro(this);
+            }else{
+                nopro(this, "올바른 형식이 아닙니다.");
+            }
+        })
+        
+        $('#pwd2').on('keyup', function(){
+            pwvalue = $(this).val().trim();
+            
+            if(passvalue == pwvalue){
+                okpro(this);
+            }else{
+                nopro(this, "일치하지 않습니다!");
+            }
+        })
+        
+        $('#bir').on('change', function(){  // 선택을 하면 바뀌니까 change로
+            birvalue = $(this).val();
+            birday = new Date(birvalue);
+            
+            today = new Date();
+            
+            toyear = today.getFullYear();
+            
+            biryear = birday.getFullYear();
+            
+            year = toyear - biryear;
+            
+            if(year >= 10){
+                okpro(this);
+            }else{
+                nopro(this, "10세 이상만 가입 가능합니다.");
+            }
+        })
+        
+        $('#gender').on('change', function(){
+            genvalue = $(this).val();
+            
+            if(genvalue == '선택'){
+                nopro(this, "선택하세요.");
+            }else{
+                okpro(this);
+            }
+        })
+        
+        
+        $('#idbtn').on('click', function(){
+            // id 중복검사
+            idcheck();
+        })
+        
+        // 우편번호 검색
+        $('#wzipbtn').on('click', function(){
+            // 새로운 창 열기
+            window.open("zipsearch.html", "_blank", "width=500 height=400");		// _self는 현재 열려있는 페이지에서 실행된다.         크기도 열려있는 페이지를 기준으로)
+        })
+        
+        // 우편 번호 modal에서 동 입력 후 확인버튼 클릭 이벤트
+        $('#dongbtn').on('click', function(){
+            dongsearch();
+        })
+        
+        // modal 결과에서 원하는 행(주소)를 선택했을 때 이벤트
+        // 동적으로 새롭게 생성된 요소 - delegate 방식
+        $('#result1').on('click', '.ziptr', function(){
+            zipselect(this);	// 외부 스크립트로 넘어가면 this가 뭔지 모르기 때문에 파라미터로 넘겨줘야한다.
+        })
+        
+        // 제출
+         $('#ff').on('submit', function(){
+        	 vgender = $('#gender').val();
+        	 if(vgender == '선택'){
+        		 nopro('#gender', "선택하세요.");
+        	 }else{
+        		 okpro('#gender');
+        	 }
+          
+             fsubmit();
+         })
+    })
+</script>
+</head>
+<body>
+
+<div class="container">
+  <h4>회원 가입</h4>
+  <form class="form-horizontal" id="ff">
+  	<div class="form-group">
+      <label class="control-label col-sm-2" for="id">아이디:</label>
+      <div class="col-sm-3">
+        <input type="text" class="form-control" id="id" placeholder="Enter id" name="mem_id">	<!-- name은 DB에 있는 컬럼명, vo와 반드시 같아야 한다. -->
+      </div>
+      <button class="btn btn-success btn-sm" id="idbtn" type="button">중복검사</button>
+      <span class="sp"></span>
+      <span id="idspan"></span>
+      <div class="msg"></div>
+    </div>
+    
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="name">이름:</label>
+      <div class="col-sm-3">
+        <input type="text" class="form-control" id="name" placeholder="Enter name" name="mem_name">
+	      <div class="msg"></div>
+      </div>
+        <span class="sp"></span>
+    </div>
+    
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="hp">전화번호:</label>
+      <div class="col-sm-3"> 
+        <input type="tel" class="form-control" id="hp" placeholder="Enter hp" name="mem_hp">
+          <div class="msg"></div>
+      </div>
+      <span class="sp"></span>
+    </div>
+    
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="bir">생년월일:</label>
+      <div class="col-sm-3">
+        <input type="date" class="form-control" id="bir" placeholder="Enter bir" name="mem_bir">
+      <div class="msg"></div>
+      </div>
+      <span class="sp"></span>
+    </div>
+    
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="gender">성별:</label>
+      <div class="col-sm-3">
+        <select class="form-control" id="gender" name="mem_gender">
+            <option value="선택">선택</option>
+            <option value="남자">남자</option>
+            <option value="여자">여자</option>
+        </select>
+      <div class="msg"></div>
+      </div>
+      <span class="sp"></span>
+    </div>
+    
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="email">이메일:</label>
+      <div class="col-sm-3">
+        <input type="email" class="form-control" id="email" placeholder="Enter email" name="mem_mail">
+      <div class="msg"></div>
+      </div>
+      <span class="sp"></span>
+    </div>
+    
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="pwd">비밀번호:</label>
+      <div class="col-sm-3">          
+        <input type="text" class="form-control" id="pwd" placeholder="Enter password" name="mem_pass">
+      <div class="msg"></div>
+      </div>
+      <span class="sp"></span>
+    </div>
+    
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="pwd2">비밀번호 확인:</label>
+      <div class="col-sm-3">          
+        <input type="text" class="form-control" id="pwd2" placeholder="Enter password">
+      <div class="msg"></div>
+      </div>
+      <span class="sp"></span>
+    </div>
+    
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="zip">우편번호:</label>
+      <div class="col-sm-3">
+        <input type="text" class="form-control" id="zip" placeholder="Enter zip" name="mem_zip">
+      </div>
+      <button class="btn btn-success btn-sm" id="wzipbtn" type="button">번호검색(window)</button>
+      <button class="btn btn-success btn-sm" data-toggle="modal" data-target="#myModal" id="mzipbtn" type="button">번호검색(modal)</button>
+    </div>
+    
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="add1">주소:</label>
+      <div class="col-sm-5">
+        <input type="text" class="form-control" id="add1" placeholder="Enter add1" name="mem_add1">
+      </div>
+    </div>
+    
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="add2">상세주소:</label>
+      <div class="col-sm-5">
+        <input type="text" class="form-control" id="add2" placeholder="Enter add2" name="mem_add2">
+      </div>
+    </div>
+    
+    <div class="form-group">        
+      <div class="col-sm-offset-2 col-sm-10">
+        <div class="checkbox">
+          <label><input type="checkbox" name="remember"> Remember me</label>
+        </div>
+      </div>
+    </div>
+    
+    <div class="form-group">        
+      <div class="col-sm-offset-2 col-sm-10">
+        <button type="submit" class="btn btn-primary btn-lg">Submit</button>
+        <span id="subspan"></span>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- Modal -->
+  <div class="modal fade" id="myModal" role="dialog">
+    <div class="modal-dialog">
+    
+      <!-- Modal content-->
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <h4 class="modal-title">Modal Header</h4>
+        </div>
+        <div class="modal-body">
+        	<input type="text" id="dong">
+			<input type="button" id="dongbtn" value = "확인">
+			
+			<div id="result1"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+  
+
+</body>
+</html>
