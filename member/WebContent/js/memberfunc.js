@@ -22,6 +22,8 @@ function nopro(vinput, text){
 
 }
 
+
+
 function idcheck(){
     idvalue = $('#id').val().trim();
 
